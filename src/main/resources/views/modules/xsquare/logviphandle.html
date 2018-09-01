@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../plugins/jqgrid/ui.jqgrid-bootstrap.css">
+    <link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <script src="../../libs/jquery.min.js"></script>
+    <script src="../../plugins/layer/layer.js"></script>
+    <script src="../../libs/bootstrap.min.js"></script>
+    <script src="../../libs/vue.min.js"></script>
+    <script src="../../plugins/jqgrid/grid.locale-cn.js"></script>
+    <script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+    <script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+    <script src="../../js/common.js"></script>
+</head>
+<style>
+
+    .ui-jqgrid tr.jqgrow td {
+        white-space: normal !important;
+        height: auto;
+    }
+
+</style>
+<body>
+<div id="rrapp" v-cloak>
+    <div v-show="showList">
+        <div class="grid-btn">
+            <div class="form-group-inline" style="width: 150px">
+                <input type="text" class="form-control" v-model="query.vipCardNum"
+                       placeholder="按会员卡号搜索"
+                       maxlength="20" @keyup.enter="find"/>
+            </div>
+            <div class="form-group-inline" style="width: 120px">
+                <select class="form-control-query" v-model="query.handleType"
+                        style="display: inline-block;width: 118px;">
+                    <option value="">会员卡操作类型</option>
+                    <option v-for="(item,index) in handleType" :value="item.id">{{ item.describe }}</option>
+                </select>
+            </div>
+            <div class="form-group-inline" style="width: 120px">
+                <select class="form-control-query" v-model="query.handlePerson"
+                        style="display: inline-block;width: 118px;">
+                    <option value="">操作人姓名</option>
+                    <option v-for="(item,index) in userList" :value="item.name">{{ item.name }}</option>
+                </select>
+            </div>
+            <a class="btn btn-primary" @click="find"><i class="fa fa-search"></i>&nbsp;查询</a>
+            <!--<a v-if="hasPermission('xsquare:logviphandle:save')" class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>-->
+            <!--<a v-if="hasPermission('xsquare:logviphandle:update')" class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>-->
+            <!--<a v-if="hasPermission('xsquare:logviphandle:delete')" class="btn btn-primary" @click="del"><i class="fa fa-trash-o"></i>&nbsp;删除</a>-->
+        </div>
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
+    </div>
+
+    <div v-show="!showList" class="panel panel-default">
+        <div class="panel-heading">{{title}}</div>
+        <form class="form-horizontal">
+            <div class="form-group">
+                <div class="col-sm-2 control-label">会员卡ID</div>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" v-model="logVipHandle.vipCardId" placeholder="会员卡ID"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label">会员卡操作类型</div>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" v-model="logVipHandle.handleType" placeholder="会员卡操作类型"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label">操作时间</div>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" v-model="logVipHandle.handleTime" placeholder="操作时间"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label">操作人</div>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" v-model="logVipHandle.handlePerson" placeholder="操作人"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label">描述</div>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" v-model="logVipHandle.describe" placeholder="描述"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label"></div>
+                <input type="button" class="btn btn-primary" @click="saveOrUpdate" value="确定"/>
+                &nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../../js/modules/xsquare/logviphandle.js"></script>
+</body>
+</html>

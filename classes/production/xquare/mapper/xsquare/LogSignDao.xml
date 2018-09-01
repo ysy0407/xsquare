@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xsquare.modules.xsquare.dao.LogSignDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.xsquare.modules.xsquare.entity.LogSignEntity" id="logSignMap">
+        <result property="id" column="id"/>
+        <result property="classtableId" column="classtable_id"/>
+        <result property="vipCardId" column="vip_card_id"/>
+        <result property="signTime" column="sign_time"/>
+        <result property="signHandlePerson" column="sign_handle_person"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+	<resultMap id="logSign" type="com.xsquare.modules.xsquare.entity.LogSignEntity" extends="logSignMap">
+		<association property="vipCardEntity" column="vip_card_id" javaType="com.xsquare.modules.xsquare.entity.VipCardEntity" select="com.xsquare.modules.xsquare.dao.VipCardDao.queryObject"></association>
+	</resultMap>
+
+	<select id="queryObject" resultType="com.xsquare.modules.xsquare.entity.LogSignEntity">
+		select * from log_sign where id = #{value}
+	</select>
+
+	<select id="queryList" resultMap="logSign">
+		select * from log_sign
+		<where>
+			`status` = 1
+			<if test="classtableId != null and classtableId != ''">
+				and `classtable_id` = #{classtableId}
+			</if>
+			<if test="vipCardId != null and vipCardId != ''">
+				and `vip_card_id` = #{vipCardId}
+			</if>
+		</where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from log_sign
+		<where>
+			`status` = 1
+			<if test="classtableId != null and classtableId != ''">
+				and `classtable_id` = #{classtableId}
+			</if>
+			<if test="vipCardId != null and vipCardId != ''">
+				and `vip_card_id` = #{vipCardId}
+			</if>
+		</where>
+	</select>
+	 
+	<insert id="save" parameterType="com.xsquare.modules.xsquare.entity.LogSignEntity">
+		insert into log_sign
+		(
+			`classtable_id`,
+			`vip_card_id`,
+			`sign_time`,
+			`sign_handle_person`
+		)
+		values
+		(
+			#{classtableId},
+			#{vipCardId},
+			#{signTime},
+			#{signHandlePerson}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.xsquare.modules.xsquare.entity.LogSignEntity">
+		update log_sign 
+		<set>
+			<if test="classtable_id != null">`classtable_id` = #{classtableId}, </if>
+			<if test="vipCardId != null">`vip_card_id` = #{vipCardId}, </if>
+			<if test="signTime != null">`sign_time` = #{signTime}, </if>
+			<if test="status != null">`status` = #{status}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		update log_sign set status = 0  where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		update log_sign set status = 0 where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

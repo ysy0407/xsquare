@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<link rel="stylesheet" href="../../css/bootstrap.min.css">
+<link rel="stylesheet" href="../../css/font-awesome.min.css">
+<link rel="stylesheet" href="../../plugins/jqgrid/ui.jqgrid-bootstrap.css">
+<link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+<link rel="stylesheet" href="../../css/main.css">
+<script src="../../libs/jquery.min.js"></script>
+<script src="../../plugins/layer/layer.js"></script>
+<script src="../../libs/bootstrap.min.js"></script>
+<script src="../../libs/vue.min.js"></script>
+<script src="../../plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+<script src="../../js/common.js"></script>
+</head>
+<body>
+<div id="rrapp" v-cloak>
+	<div v-show="showList">
+		<div class="grid-btn">
+			<div class="form-group-inline" style="width: 110px">
+				<select class="form-control-query" v-model="query.handlePerson"
+						style="display: inline-block;width: 118px;">
+					<option value="">操作人姓名</option>
+					<option v-for="(item,index) in userList" :value="item.name">{{ item.name }}</option>
+				</select>
+			</div>
+			<div class="form-group-inline" style="width: 120px">
+				<select class="form-control-query" v-model="query.moneyType"
+						style="display: inline-block;width: 118px;">
+					<option value="">财务类型</option>
+					<option value="1">收入</option>
+					<option value="0">支出</option>
+
+				</select>
+			</div>
+			<a class="btn btn-primary" @click="find"><i class="fa fa-search"></i>&nbsp;查询</a>
+			<!--<a v-if="hasPermission('xsquare:logmoney:save')" class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>-->
+			<!--<a v-if="hasPermission('xsquare:logmoney:update')" class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>-->
+			<!--<a v-if="hasPermission('xsquare:logmoney:delete')" class="btn btn-primary" @click="del"><i class="fa fa-trash-o"></i>&nbsp;删除</a>-->
+		</div>
+	    <table id="jqGrid"></table>
+	    <div id="jqGridPager"></div>
+    </div>
+    
+    <div v-show="!showList" class="panel panel-default">
+		<div class="panel-heading">{{title}}</div>
+		<form class="form-horizontal">
+											<div class="form-group">
+			   	<div class="col-sm-2 control-label">金额类型，1：收入，0：支出</div>
+			   	<div class="col-sm-10">
+			      <input type="text" class="form-control" v-model="logMoney.moneyType" placeholder="金额类型，1：收入，0：支出"/>
+			    </div>
+			</div>
+									<div class="form-group">
+			   	<div class="col-sm-2 control-label">金额大小，金额减少：负数，金额增加：整数，方便到时候金额计算</div>
+			   	<div class="col-sm-10">
+			      <input type="text" class="form-control" v-model="logMoney.moneyNumber" placeholder="金额大小，金额减少：负数，金额增加：整数，方便到时候金额计算"/>
+			    </div>
+			</div>
+									<div class="form-group">
+			   	<div class="col-sm-2 control-label">具体事项</div>
+			   	<div class="col-sm-10">
+			      <input type="text" class="form-control" v-model="logMoney.describe" placeholder="具体事项"/>
+			    </div>
+			</div>
+									<div class="form-group">
+			   	<div class="col-sm-2 control-label">操作时间</div>
+			   	<div class="col-sm-10">
+			      <input type="text" class="form-control" v-model="logMoney.handleTime" placeholder="操作时间"/>
+			    </div>
+			</div>
+									<div class="form-group">
+			   	<div class="col-sm-2 control-label">操作人</div>
+			   	<div class="col-sm-10">
+			      <input type="text" class="form-control" v-model="logMoney.handlePerson" placeholder="操作人"/>
+			    </div>
+			</div>
+									<div class="form-group">
+			   	<div class="col-sm-2 control-label">备注</div>
+			   	<div class="col-sm-10">
+			      <input type="text" class="form-control" v-model="logMoney.note" placeholder="备注"/>
+			    </div>
+			</div>
+							<div class="form-group">
+				<div class="col-sm-2 control-label"></div> 
+				<input type="button" class="btn btn-primary" @click="saveOrUpdate" value="确定"/>
+				&nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script src="../../js/modules/xsquare/logmoney.js"></script>
+</body>
+</html>

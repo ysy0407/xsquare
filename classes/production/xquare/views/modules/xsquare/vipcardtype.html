@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../plugins/jqgrid/ui.jqgrid-bootstrap.css">
+    <link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <script src="../../libs/jquery.min.js"></script>
+    <script src="../../plugins/layer/layer.js"></script>
+    <script src="../../libs/bootstrap.min.js"></script>
+    <script src="../../libs/vue.min.js"></script>
+    <script src="../../plugins/jqgrid/grid.locale-cn.js"></script>
+    <script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+    <script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+    <script src="../../js/common.js"></script>
+</head>
+<body>
+<div id="rrapp" v-cloak>
+    <div v-show="showList">
+        <div class="grid-btn">
+            <div class="form-group-inline" style="width: 155px">
+                <input type="text" class="form-control" v-model="query.cardTypeName"
+                       placeholder="搜索会员卡类型名称"
+                       maxlength="20" @keyup.enter="find"/>
+            </div>
+            <div class="form-group-inline" style="width: 149px">
+                <select class="form-control-query" v-model="query.status" style="display: inline-block;width: 147px;">
+                    <option value="">会员卡类型状态</option>
+                    <option value="1">正常</option>
+                    <option value="0">删除</option>
+                </select>
+            </div>
+            <a class="btn btn-primary" @click="find"><i class="fa fa-search"></i>&nbsp;查询</a>
+            <a v-if="hasPermission('xsquare:vipcardtype:save')" class="btn btn-primary" @click="add">
+                <i class="fa fa-plus"></i>&nbsp;新增</a>
+            <a v-if="hasPermission('xsquare:vipcardtype:delete')" class="btn btn-primary" @click="del">
+                <i class="fa fa-trash-o"></i>&nbsp;删除</a>
+        </div>
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
+    </div>
+
+    <div v-show="!showList" class="panel panel-default">
+        <div class="panel-heading">{{title}} (<span style="color: red">*</span> 为必填项)</div>
+        <form class="form-horizontal" id="formAdd">
+            <div class="form-group">
+                <div class="col-sm-2 control-label"><span style="color: red">*</span> 会员卡类型名称</div>
+                <div class="col-sm-2">
+                    <input type="text" class="form-control" v-model="vipCardType.name" placeholder="会员卡类型名称" maxLength="20" />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label"><span style="color: red">*</span> 默认售价</div>
+                <div class="col-sm-2">
+                    <input type="number" class="form-control" v-model="vipCardType.price" placeholder="默认售价" max="9999999999" min="0" />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label">赠送积分</div>
+                <div class="col-sm-2">
+                    <input type="number" class="form-control" v-model="vipCardType.integral" placeholder="0" max="9999999999" min="0" >
+                </div>
+            </div>
+            <div class="form-group">
+                <!--2：余额扣费，3：按次扣费，4：有效期内免费-->
+                <div class="col-sm-2 control-label"><span style="color: red">*</span> 扣费方式</div>
+                <div class="col-sm-2">
+                    <select class="form-control" v-model="vipCardType.deductionType" onchange="changeDeductionType(this, vm.show)">
+                        <option v-for="(item,index) in deductionType" :value="item.id">{{ item.describe }}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" v-show="show.initialMoney">
+                <div class="col-sm-2 control-label">初始金额</div>
+                <div class="col-sm-2">
+                    <input type="number" class="form-control" v-model="vipCardType.initialMoney"
+                           placeholder="0" max="9999999999" min="0" />
+                </div>
+            </div>
+            <div class="form-group" v-show="show.initialNumber">
+                <div class="col-sm-2 control-label">初始次数</div>
+                <div class="col-sm-2">
+                    <input type="number" class="form-control" v-model="vipCardType.initialNumber"
+                           placeholder="0" max="9999999999" min="0"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label"><span style="color: red">*</span> 初始有效时间</div>
+                <div class="col-sm-2">
+                    <div class="col-sm-8" style="padding-right: 0px;padding-left: 0px">
+                        <input type="number" class="form-control" v-model="vipCardType.initialEffectiveDate"
+                               placeholder="初始有效时间" style="display: inline-block;" max="9999999999" min="0" maxlength="10"/>
+                    </div>
+                    <div class="col-sm-4" style="padding-right: 0px;padding-left: 0px">
+                        <select class="form-control" v-model="vipCardType.effectiveType" style="display: inline-block;">
+                            <option value="1">天</option>
+                            <option value="2">周</option>
+                            <option value="3">月</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label"><span style="color: red">*</span> 初始生效时间</div>
+                <div class="col-sm-2">
+                    <input type="date" class="form-control" v-model="vipCardType.takeEffectDate" >
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2 control-label"></div>
+                <input type="button" class="btn btn-primary" @click="saveOrUpdate" value="确定"/>
+                &nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../../js/modules/xsquare/vipcardtype.js"></script>
+<script src="../../js/modules/xsquare/common.js"></script>
+</body>
+</html>

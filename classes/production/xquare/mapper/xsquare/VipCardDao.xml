@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xsquare.modules.xsquare.dao.VipCardDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.xsquare.modules.xsquare.entity.VipCardEntity" id="vipCardMap">
+        <result property="id" column="id"/>
+        <result property="vipCardNum" column="vip_card_num"/>
+        <result property="vipUserId" column="vip_user_id"/>
+        <result property="vipCardTypeId" column="vip_card_type_id"/>
+        <result property="price" column="price"/>
+        <result property="integral" column="integral"/>
+        <result property="deductionType" column="deduction_type"/>
+        <result property="balanceMoney" column="balance_money"/>
+        <result property="balanceNumber" column="balance_number"/>
+        <result property="effectiveDate" column="effective_date"/>
+        <result property="openDate" column="open_date"/>
+        <result property="status" column="status"/>
+		<association property="vipUser" column="vip_user_id" javaType="com.xsquare.modules.xsquare.entity.VipUserEntity" select="com.xsquare.modules.xsquare.dao.VipUserDao.queryObject"></association>
+		<association property="dictDeductionType" column="deduction_type" javaType="com.xsquare.modules.xsquare.entity.DictEntity" select="com.xsquare.modules.xsquare.dao.DictDao.queryObject"></association>
+		<association property="vipCardType" column="vip_card_type_id" javaType="com.xsquare.modules.xsquare.entity.VipCardTypeEntity" select="com.xsquare.modules.xsquare.dao.VipCardTypeDao.queryObject"></association>
+    </resultMap>
+
+	<select id="queryObject" resultMap="vipCardMap">
+		select * from vip_card where id = #{value}
+	</select>
+
+	<select id="queryList" resultMap="vipCardMap">
+		select * from vip_card card, vip_user user
+		<where>
+			card.vip_user_id = user.id
+			<if test="vipCardStatus != null and vipCardStatus != ''">
+				and card.`status` = #{vipCardStatus}
+			</if>
+			<if test="vipCardType != null and vipCardType != ''">
+				AND card.`vip_card_type_id` = #{vipCardType}
+			</if>
+			<if test="userNameOrCardId != null ">
+				AND (card.`vip_card_num` = #{userNameOrCardId} OR user.`name` LIKE '%${userNameOrCardId}%')
+			</if>
+			<if test="vipCardNum != null">
+				AND card.`vip_card_num` = #{vipCardNum}
+			</if>
+		</where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by card.${sidx} ${order}
+            </when>
+			<otherwise>
+                order by card.id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from vip_card card, vip_user user
+		<where>
+			card.vip_user_id = user.id
+			<if test="vipCardStatus != null and vipCardStatus != ''">
+				and card.`status` = #{vipCardStatus}
+			</if>
+			<if test="vipCardType != null and vipCardType != ''">
+				AND card.`vip_card_type_id` = #{vipCardType}
+			</if>
+			<if test="userNameOrCardId != null ">
+				AND (card.`vip_card_num` LIKE '%${userNameOrCardId}%' OR user.`name` LIKE '%${userNameOrCardId}%')
+			</if>
+		</where>
+	</select>
+	 
+	<insert id="save" parameterType="com.xsquare.modules.xsquare.entity.VipCardEntity">
+		insert into vip_card
+		(
+			`id`, 
+			`vip_card_num`,
+			`vip_user_id`,
+			`vip_card_type_id`, 
+			`price`, 
+			`integral`, 
+			`deduction_type`, 
+			`balance_money`, 
+			`balance_number`, 
+			`take_effect_date`,
+			`effective_date`,
+			`open_date`
+		)
+		values
+		(
+			#{id}, 
+			#{vipCardNum},
+			#{vipUserId},
+			#{vipCardTypeId}, 
+			#{price}, 
+			#{integral}, 
+			#{deductionType}, 
+			#{balanceMoney}, 
+			#{balanceNumber}, 
+			#{takeEffectDate},
+			#{effectiveDate},
+			#{openDate}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.xsquare.modules.xsquare.entity.VipCardEntity">
+		update vip_card 
+		<set>
+			<if test="vipUserId != null">`vip_user_id` = #{vipUserId}, </if>
+			<if test="vipCardTypeId != null">`vip_card_type_id` = #{vipCardTypeId}, </if>
+			<if test="price != null">`price` = #{price}, </if>
+			<if test="integral != null">`integral` = #{integral}, </if>
+			<if test="deductionType != null">`deduction_type` = #{deductionType}, </if>
+			<if test="balanceMoney != null">`balance_money` = #{balanceMoney}, </if>
+			<if test="balanceNumber != null">`balance_number` = #{balanceNumber}, </if>
+			<if test="effectiveDate != null">`effective_date` = #{effectiveDate}, </if>
+			<if test="openDate != null">`open_date` = #{openDate}, </if>
+			<if test="status != null">`status` = #{status}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		delete from vip_card where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		update vip_card set `status` = 5 where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

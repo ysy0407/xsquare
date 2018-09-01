@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xsquare.modules.xsquare.dao.TeacherDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.xsquare.modules.xsquare.entity.TeacherEntity" id="teacherMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="entryDate" column="entry_date"/>
+        <result property="leaveDate" column="leave_date"/>
+        <result property="currentSalary" column="current_salary"/>
+        <result property="status" column="status"/>
+        <result property="note" column="note"/>
+    </resultMap>
+
+	<select id="queryObject" resultType="com.xsquare.modules.xsquare.entity.TeacherEntity">
+		select * from teacher where id = #{value}
+	</select>
+
+	<select id="queryList" resultType="com.xsquare.modules.xsquare.entity.TeacherEntity">
+		select * from teacher
+		<where>
+			<if test="status != null and status != ''">
+				and status = #{status}
+			</if>
+			<if test="status == null">
+				and status = 1
+			</if>
+			<if test="teacherNameOrPhone != null ">
+				AND (name LIKE '%${teacherNameOrPhone}%' OR phone LIKE '%${teacherNameOrPhone}%')
+			</if>
+		</where>
+        <choose>
+            <when test="sidx != null and sidx.trim() != ''">
+                order by ${sidx} ${order}
+            </when>
+			<otherwise>
+                order by id desc
+			</otherwise>
+        </choose>
+		<if test="offset != null and limit != null">
+			limit #{offset}, #{limit}
+		</if>
+	</select>
+	
+ 	<select id="queryTotal" resultType="int">
+		select count(*) from teacher
+		<where>
+			<if test="status != null and status != ''">
+				and status = #{status}
+			</if>
+			<if test="status == null ">
+				and status = 1
+			</if>
+			<if test="teacherNameOrPhone != null ">
+				AND (name LIKE '%${teacherNameOrPhone}%' OR phone LIKE '%${teacherNameOrPhone}%')
+			</if>
+		</where>
+	</select>
+	 
+	<insert id="save" parameterType="com.xsquare.modules.xsquare.entity.TeacherEntity">
+		insert into teacher
+		(
+			`name`,
+			`phone`, 
+			`entry_date`, 
+			`leave_date`, 
+			`current_salary`,
+			`note`
+		)
+		values
+		(
+			#{name},
+			#{phone}, 
+			#{entryDate}, 
+			#{leaveDate}, 
+			#{currentSalary},
+			#{note}
+		)
+	</insert>
+	 
+	<update id="update" parameterType="com.xsquare.modules.xsquare.entity.TeacherEntity">
+		update teacher 
+		<set>
+			<if test="name != null">`name` = #{name}, </if>
+			<if test="phone != null">`phone` = #{phone}, </if>
+			<if test="entryDate != null">`entry_date` = #{entryDate}, </if>
+			<if test="leaveDate != null">`leave_date` = #{leaveDate}, </if>
+			<if test="currentSalary != null">`current_salary` = #{currentSalary}</if>
+			<if test="status != null">`status` = #{status}</if>
+			<if test="note != null">`note` = #{note}</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<delete id="delete">
+		update teacher set status = 0 where id = #{value}
+	</delete>
+	
+	<delete id="deleteBatch">
+		update teacher set status = 0 where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

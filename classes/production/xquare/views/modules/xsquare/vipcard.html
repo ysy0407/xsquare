@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../plugins/jqgrid/ui.jqgrid-bootstrap.css">
+    <link rel="stylesheet" href="../../plugins/ztree/css/metroStyle/metroStyle.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <script src="../../libs/jquery.min.js"></script>
+    <script src="../../plugins/layer/layer.js"></script>
+    <script src="../../libs/bootstrap.min.js"></script>
+    <script src="../../libs/vue.min.js"></script>
+    <script src="../../plugins/jqgrid/grid.locale-cn.js"></script>
+    <script src="../../plugins/jqgrid/jquery.jqGrid.min.js"></script>
+    <script src="../../plugins/ztree/jquery.ztree.all.min.js"></script>
+    <script src="../../js/common.js"></script>
+</head>
+<body>
+<div id="rrapp" v-cloak>
+    <div id="showList" v-show="showList">
+        <div class="grid-btn">
+            <div class="form-group-inline" style="width: 150px">
+                <input type="text" class="form-control" v-model="query.userNameOrCardId"
+                       placeholder="搜索姓名/会员卡号"
+                       maxlength="20" @keyup.enter="find"/>
+            </div>
+            <div class="form-group-inline" style="width: 162px">
+                <select class="form-control-query" v-model="query.vipCardType" style="display: inline-block;width: 160px;">
+                    <option value="">会员卡类型</option>
+                    <option v-for="(item,index) in vipCardType" :value="item.id">{{ item.name }}</option>
+                </select>
+            </div>
+            <div class="form-group-inline" style="width: 120px">
+                <select class="form-control-query" v-model="query.vipCardStatus" style="display: inline-block;width: 118px;">
+                    <option value="">会员卡状态</option>
+                    <option value="1">正常</option>
+                    <option value="2">冻结</option>
+                    <option value="4">换卡</option>
+                    <option value="3">过期</option>
+                    <option value="5">删除</option>
+                </select>
+            </div>
+            <a class="btn btn-primary" @click="find"><i class="fa fa-search"></i>&nbsp;查询</a>
+            <a v-if="hasPermission('xsquare:vipcard:save')" class="btn btn-primary" @click="add"><i
+                    class="fa fa-plus"></i>&nbsp;新增会员卡</a>
+            <a v-if="hasPermission('xsquare:vipcard:update')" class="btn btn-primary" @click="update"><i
+                    class="fa fa-pencil-square-o"></i>&nbsp;修改会员</a>
+            <a v-if="hasPermission('xsquare:vipcard:delete')" class="btn btn-primary" @click="del"><i
+                    class="fa fa-trash-o"></i>&nbsp;删除会员卡</a>
+        </div>
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
+    </div>
+    <div id="vipCard">
+        <div v-show="!showVipUser" class="panel panel-default">
+            <div class="panel-heading">{{title}} (<span class="notNullMarks" style="color: red">*</span> 为必填项)</div>
+            <form class="form-horizontal">
+                <!--会员信息-->
+                <div class="form-group" onmouseenter="vipNameOnMouseEnter()" onmouseleave="vipNameOnMouseLeave()">
+                    <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 会员姓名</div>
+                    <div class="col-sm-2">
+                        <input type="text" id="vipUser-name" class="form-control" onchange="changeVipUserName()"
+                               v-model="vipUser.name" placeholder="会员姓名"
+                               maxlength="20"/>
+                    </div>
+                    <!--当输入会员姓名的时候，查找并显示对应的会员姓名-->
+                    <!--外层show.historyVipUserAll控制修改的时候是否显示-->
+                    <div v-show="show.historyVipUserAll">
+                        <!--内层show.historyVipUser控制新增的时候，是否显示-->
+                        <div class="col-sm-2" v-show="show.historyVipUser">
+                            <select class="form-control" id="historyVipUser" v-model="vipUser.id"
+                                    onchange="changeHistoryVipUser(this)">
+                                <option value="">- - 未选择 - -</option>
+                                <option v-for="(item,index) in historyVipUser" :value="item.id">{{ item.name }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">会员性别</div>
+                    <div class="col-sm-2">
+                        <label class="radio-inline">
+                            <input type="radio" name="status" value="0" v-model="vipUser.gender"/> 男
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="status" value="1" v-model="vipUser.gender"/> 女
+                        </label>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label"><span class="notNullMark" style="color: red">*</span> 联系方式
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" v-model="vipUser.phone" placeholder="联系方式"
+                                   maxlength="20"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">会员生日</div>
+                    <div class="col-sm-2">
+                        <input type="date" class="form-control" v-model="vipUser.birthday"/><br>
+                        <div>
+                            <div style="position: absolute; margin-left: -97px;margin-top: 8px">
+                                <span class="notNullMark" style="color: red">*</span> 会员密码
+                            </div>
+                            <div>
+                                <input type="text" class="form-control" v-model="vipUser.password" placeholder="将用于签到"
+                                       maxlength="20"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label">会员备注</div>
+                        <div class="col-sm-2">
+                        <textarea class="form-control" v-model="vipUser.note" maxLength="225"
+                                  style="height: 88px;resize: none" maxlength="255"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div v-show="!showVipCard" class="panel panel-default">
+            <div class="panel-heading">新增会员卡信息 (<span class="notNullMarks" style="color: red">*</span> 为必填项)</div>
+            <form class="form-horizontal">
+                <!--会员卡信息-->
+                <div class="form-group">
+                    <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 会员卡号</div>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" v-model="vipCard.vipCardNum"
+                               placeholder="卡号为数字或英文,最多20位"
+                               maxlength="20"/>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label"><span class="notNullMark" style="color: red">*</span> 会员卡类型
+                        </div>
+                        <div class="col-sm-2">
+                            <select id="vipCard-vipCardTypeId" class="form-control" v-model="vipCard.vipCardTypeId"
+                                    onchange="changeVipCardType(this, 1)" refs="card">
+                                <option value="">- - 未选择 - -</option>
+                                <option v-for="(item,index) in vipCardType" :value="item.id">{{ item.name }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">缴纳金额</div>
+                    <div class="col-sm-2">
+                        <input type="number" id="needFocusOne" class="form-control" v-model="vipCard.price"
+                               placeholder="缴纳金额" max="9999999999" min="0"/>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label">赠送积分</div>
+                        <div class="col-sm-2">
+                            <input type="number" id="needFocusTwo" class="form-control" v-model="vipCard.integral"
+                                   placeholder="赠送积分" max="9999999999" min="0"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">扣费方式</div>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" v-model="dictDeductionDesc"
+                               placeholder="扣费方式，2：余额扣费，3：按次扣费，4：有效期内免费" disabled="false"/>
+                    </div>
+                    <div v-show="show.initialMoney">
+                        <div class="col-sm-1 control-label">初始金额</div>
+                        <div class="col-sm-2">
+                            <input type="number" class="form-control" v-model="vipCard.balanceMoney" placeholder="初始金额"
+                                   max="9999999999" min="0"/>
+                        </div>
+                    </div>
+                    <div v-show="show.initialNumber">
+                        <div class="col-sm-1 control-label">初始次数</div>
+                        <div class="col-sm-2">
+                            <input type="number" class="form-control" v-model="vipCard.balanceNumber" placeholder="初始次数"
+                                   max="9999999999" min="0"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 生效时间</div>
+                    <div class="col-sm-2">
+                        <input type="date" class="form-control" v-model="vipCard.takeEffectDate"
+                               onchange="changeTakeEffectDate(1)"/>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label"><span class="notNullMark" style="color: red">*</span> 有效期至
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="date" id="vipCard-effectiveDate" class="form-control"
+                                   v-model="vipCard.effectiveDate"/>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="form-group" v-show="!showVipUser">
+            <div class="col-sm-2 control-label"></div>
+            <input type="button" class="btn btn-primary" @click="saveOrUpdate" value="确定"/>
+            &nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+        </div>
+    </div>
+    <!--操作会员卡-->
+    <div style="display: none;width: 1000px;height: 563px" id="handleVipCard">
+        <!--不可修改的会员卡信息-->
+        <div class="panel panel-default">
+            <div class="panel-heading">会员卡信息</div>
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">会员卡号</div>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" v-model="vipCard.vipCardNum" disabled="false"/>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label" style="width: 15%;">会员姓名</div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" v-model="vipUser.name" disabled="false"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">扣费方式</div>
+                    <div class="col-sm-2">
+                        <input type="text" class="form-control" v-model="dictDeductionDesc" disabled="false"/>
+                    </div>
+                    <div v-show="show.initialMoney">
+                        <div class="col-sm-1 control-label" style="width: 15%;">剩余金额</div>
+                        <div class="col-sm-2">
+                            <input type="number" class="form-control" v-model="vipCard.balanceMoney" disabled="false"/>
+                        </div>
+                    </div>
+                    <div v-show="show.initialNumber">
+                        <div class="col-sm-1 control-label" style="width: 15%;">剩余次数</div>
+                        <div class="col-sm-2">
+                            <input type="number" class="form-control" v-model="vipCard.balanceNumber" disabled="false"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">剩余积分</div>
+                    <div class="col-sm-2">
+                        <input type="number" class="form-control" v-model="vipCard.integral" disabled="false"/>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label" style="width: 15%;">有效期至</div>
+                        <div class="col-sm-2">
+                            <input type="date" class="form-control" v-model="vipCard.effectiveDate" disabled="false"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">开卡日期</div>
+                    <div class="col-sm-2">
+                        <input type="date" class="form-control" v-model="vipCard.openDate"  disabled="false"/>
+                    </div>
+                    <div>
+                        <div class="col-sm-1 control-label" style="width: 15%;">生效日期</div>
+                        <div class="col-sm-2">
+                            <input type="date" class="form-control" v-model="vipCard.takeEffectDate" disabled="false" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="panel panel-default">
+            <!--操作内容-->
+            <div class="panel-heading">{{ handleTitle }} (<span class="notNullMarks" style="color: red">*</span> 为必填项)
+            </div>
+            <form class="form-horizontal">
+                <!--充值-->
+                <div v-show="show.recharge.all">
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 实收金额
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" v-model="handle.getMoney" placeholder="实收金额"/>
+                        </div>
+                        <div v-show="show.initialMoney">
+                            <div class="col-sm-1 control-label" style="width: 15%;">充值金额</div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" v-model="handle.rechargeMoney"
+                                       placeholder="充值金额"/>
+                            </div>
+                        </div>
+                        <div v-show="show.initialNumber">
+                            <div class="col-sm-1 control-label" style="width: 15%;">充值次数</div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" v-model="handle.rechargeNumber"
+                                       placeholder="充值次数"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label">赠送积分</div>
+                        <div class="col-sm-2">
+                            <input type="number" class="form-control" v-model="handle.rechargeIntegral"
+                                   placeholder="赠送积分"/>
+                        </div>
+                        <div>
+                            <div class="col-sm-1 control-label" style="width: 15%;">有效期至</div>
+                            <div class="col-sm-2">
+                                <input type="date" class="form-control" id="handle-rechargeDate"
+                                       v-model="handle.rechargeDate"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--扣费，积分，退款-->
+                <div class="form-group" v-show="show.deduct.outMoney">
+                    <div>
+                        <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 退款金额</div>
+                        <div class="col-sm-2">
+                            <input type="number" class="form-control" v-model="handle.outMoney" placeholder="退款金额"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" v-show="show.deduct.all">
+                    <div v-show="show.deduct.noChangeVipCard">
+                        <div v-show="show.initialMoney">
+                            <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 扣除金额</div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" v-model="handle.deductMoney"
+                                       placeholder="扣除金额"/>
+                            </div>
+                        </div>
+                        <div v-show="show.initialNumber">
+                            <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 扣除次数</div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" v-model="handle.deductNumber"
+                                       placeholder="扣除次数"/>
+                            </div>
+                        </div>
+                        <div v-show="show.deduct.deductDate">
+                            <div class="col-sm-1 control-label" style="width: 15%;" id="handle-deductDate-label">
+                            </div>
+                            <div class="col-sm-2">
+                                <input type="date" class="form-control" id="handle-deductDate"
+                                       v-model="handle.deductDate"/>
+                            </div>
+                        </div>
+                        <div v-show="show.deduct.integral">
+                            <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 积分操作</div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" v-model="handle.integral" placeholder="增加为正数,减少为负数"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-show="showChangeVipCard" >
+                    <!--会员卡信息-->
+                    <div class="form-group">
+                        <div>
+                            <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 会员卡类型
+                            </div>
+                            <div class="col-sm-2">
+                                <select class="form-control" v-model="newVipCard.vipCardTypeId"
+                                        onchange="changeVipCardType(this, 2)" refs="card">
+                                    <option value="">- - 未选择 - -</option>
+                                    <option v-for="(item,index) in vipCardType" :value="item.id">{{ item.name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span> 缴纳金额</div>
+                        <div class="col-sm-2">
+                            <input type="number" id="needFocusThree" class="form-control" v-model="newVipCard.price"
+                                   placeholder="缴纳金额" max="9999999999" min="0"/>
+                        </div>
+                        <div>
+                            <div class="col-sm-1 control-label" style="width: 15%;">赠送积分</div>
+                            <div class="col-sm-2">
+                                <input type="number" id="needFocusFour" class="form-control"
+                                       v-model="newVipCard.integral"
+                                       placeholder="赠送积分" max="9999999999" min="0"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label">扣费方式</div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" v-model="newVipCard.dictDeductionDesc"
+                                   placeholder="扣费方式，2：余额扣费，3：按次扣费，4：有效期内免费" disabled="false"/>
+                        </div>
+                        <div v-show="newVipCard.show.initialMoney">
+                            <div class="col-sm-1 control-label" style="width: 15%;">初始金额</div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" v-model="newVipCard.balanceMoney"
+                                       placeholder="初始金额"
+                                       max="9999999999" min="0"/>
+                            </div>
+                        </div>
+                        <div v-show="newVipCard.show.initialNumber">
+                            <div class="col-sm-1 control-label" style="width: 15%;">初始次数</div>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" v-model="newVipCard.balanceNumber"
+                                       placeholder="初始次数"
+                                       max="9999999999" min="0"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label"><span class="notNullMark" style="color: red">*</span>
+                            生效时间
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="date" class="form-control" v-model="newVipCard.takeEffectDate"
+                                   onchange="changeTakeEffectDate(2)"/>
+                        </div>
+                        <div>
+                            <div class="col-sm-1 control-label" style="width: 15%;"><span class="notNullMark" style="color: red">*</span> 有效期至</div>
+                            <div class="col-sm-2">
+                                <input type="date" id="changeVipCard-effectiveDate" class="form-control"
+                                       v-model="newVipCard.effectiveDate"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-2 control-label">备注</div>
+                    <div class="col-sm-2">
+                        <textarea class="form-control" v-model="handle.note" maxLength="225"
+                                  style="height: 88px;resize: none"  placeholder="备注"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../../js/modules/xsquare/vipcard.js"></script>
+<script src="../../js/modules/xsquare/common.js"></script>
+</body>
+</html>

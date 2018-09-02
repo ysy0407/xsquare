@@ -24,6 +24,10 @@ public class LogSignEntity implements Serializable {
 	private String classtableId;
 	//签到时间
 	private String signTime;
+	//短信发送状态,-2：提交失败，-1：提交成功，1：发送成功，2：发送失败
+	private Integer smsStatus;
+	//短信流水号
+	private String msgId;
 	//签到的执行人员
 	private String signHandlePerson;
 	//签到日志状态，1：正常，0：被撤销
@@ -81,6 +85,22 @@ public class LogSignEntity implements Serializable {
 	 */
 	public String getSignTime() {
 		return signTime;
+	}
+
+	public String getMsgId() {
+		return msgId;
+	}
+
+	public void setMsgId(String msgId) {
+		this.msgId = msgId;
+	}
+
+	public Integer getSmsStatus() {
+		return smsStatus;
+	}
+
+	public void setSmsStatus(Integer smsStatus) {
+		this.smsStatus = smsStatus;
 	}
 
 	public String getSignHandlePerson() {

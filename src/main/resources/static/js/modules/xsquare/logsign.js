@@ -72,6 +72,22 @@ $(function () {
             { label: '会员卡号', name: 'vipCardEntity.vipCardNum', index: '', width: 120, align: "center", sortable: false},
             { label: '会员类别', name: 'vipCardEntity.vipCardType.name', index: '', width: 120, align: "center", sortable: false},
             { label: '签到时间', name: 'signTime', index: 'sign_time', width: 150, align: "center", sortable: true},
+            { label: '短信发送状态', name: 'smsStatus', index: '', width: 100, align: "center", sortable: false,
+                //短信发送状态，-2：提交失败，-1：提交成功，0：未发送，1：发送成功，2：发送失败
+                formatter: function (cellValue, options, rowObject) {
+                    if (cellValue == -2) {
+                        return '提交失败'
+                    } else if (cellValue == -1) {
+                        return '提交成功'
+                    } else if (cellValue == 1) {
+                        return '发送失败'
+                    } else if (cellValue == 2) {
+                        return '发送成功'
+                    } else {
+                        return '未发送'
+                    }
+                }
+            },
             { label: '操作人员', name: 'signHandlePerson', index: '', width: 80, align: "center", sortable: false},
             { label: '操作', name: '', index: 'handle', width: 100, align: "center", sortable: false,
                 formatter: function (cellValue, options, rowObject) {

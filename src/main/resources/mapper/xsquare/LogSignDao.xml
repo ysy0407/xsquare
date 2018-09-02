@@ -9,6 +9,8 @@
         <result property="classtableId" column="classtable_id"/>
         <result property="vipCardId" column="vip_card_id"/>
         <result property="signTime" column="sign_time"/>
+        <result property="smsStatus" column="sms_status"/>
+        <result property="msgId" column="msg_id"/>
         <result property="signHandlePerson" column="sign_handle_person"/>
         <result property="status" column="status"/>
     </resultMap>
@@ -64,6 +66,8 @@
 			`classtable_id`,
 			`vip_card_id`,
 			`sign_time`,
+			`sms_status`,
+			`msg_id`,
 			`sign_handle_person`
 		)
 		values
@@ -71,6 +75,8 @@
 			#{classtableId},
 			#{vipCardId},
 			#{signTime},
+			#{smsStatus},
+			#{msgId},
 			#{signHandlePerson}
 		)
 	</insert>
@@ -81,6 +87,8 @@
 			<if test="classtable_id != null">`classtable_id` = #{classtableId}, </if>
 			<if test="vipCardId != null">`vip_card_id` = #{vipCardId}, </if>
 			<if test="signTime != null">`sign_time` = #{signTime}, </if>
+			<if test="smsStatus != null">`sms_status` = #{smsStatus}, </if>
+			<if test="msgId != null">`msg_id` = #{msgId}, </if>
 			<if test="status != null">`status` = #{status}</if>
 		</set>
 		where id = #{id}

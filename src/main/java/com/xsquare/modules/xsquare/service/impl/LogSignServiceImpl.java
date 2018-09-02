@@ -121,6 +121,7 @@ public class LogSignServiceImpl implements LogSignService {
 		logSign.setSignHandlePerson(handlePerson);
 		//todo 短信发送，短信内容，尊敬的埃克斯方舞馆会员，您的卡号为{0}的会员卡，于{1}签到{2}课程，您的会员卡{3}。
 		//{0}：卡号，{1}：签到时间，{2}：课程名称，{3}：剩余次数/金额，有效期至。。。
+		//或者直接大变量模板
 		try {
 			JSONObject result = sendSms(vipCard.getVipUser().getPhone(), true);
 			if (result != null && result.getInt("success") == 1) {

@@ -83,7 +83,9 @@ public class CourseController {
 			}
 		}
 		course.setVipCardType(vipCardTypeStr.toString());
-
+		if (course.getSignIntegral() == null) {
+			course.setSignIntegral(0);
+		}
 		courseService.save(course);
 		
 		return R.ok();

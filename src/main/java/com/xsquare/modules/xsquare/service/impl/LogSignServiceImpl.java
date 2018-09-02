@@ -2,12 +2,15 @@ package com.xsquare.modules.xsquare.service.impl;
 
 import com.xsquare.common.exception.RRException;
 import com.xsquare.common.utils.DateUtils;
+import com.xsquare.common.utils.SendSmsUtils;
 import com.xsquare.modules.sys.entity.SysUserEntity;
 import com.xsquare.modules.xsquare.entity.*;
-import com.xsquare.modules.xsquare.service.ClasstableService;
-import com.xsquare.modules.xsquare.service.CourseService;
-import com.xsquare.modules.xsquare.service.VipCardService;
+import com.xsquare.modules.xsquare.service.*;
 import org.apache.shiro.SecurityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +20,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.xsquare.modules.xsquare.dao.LogSignDao;
-import com.xsquare.modules.xsquare.service.LogSignService;
 import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("logSignService")
 public class LogSignServiceImpl implements LogSignService {
+
+	private static Logger LOG = LoggerFactory.getLogger(LogSignServiceImpl.class);
 	@Autowired
 	private LogSignDao logSignDao;
 	@Autowired
@@ -31,6 +35,8 @@ public class LogSignServiceImpl implements LogSignService {
 	private CourseService courseService;
 	@Autowired
 	private VipCardService vipCardService;
+	@Autowired
+	private DictService dictService;
 	
 	@Override
 	public LogSignEntity queryObject(Integer id){
@@ -113,7 +119,53 @@ public class LogSignServiceImpl implements LogSignService {
 		//操作人姓名
 		String handlePerson = ((SysUserEntity) SecurityUtils.getSubject().getPrincipal()).getName();
 		logSign.setSignHandlePerson(handlePerson);
+		//todo 短信发送，短信内容，尊敬的埃克斯方舞馆会员，您的卡号为{0}的会员卡，于{1}签到{2}课程，您的会员卡{3}。
+		//{0}：卡号，{1}：签到时间，{2}：课程名称，{3}：剩余次数/金额，有效期至。。。
+		//或者直接大变量模板
+		try {
+			JSONObject result = sendSms(vipCard.getVipUser().getPhone(), true);
+			if (result != null && result.getInt("success") == 1) {
+                logSign.setSmsStatus(-1);
+                logSign.setMsgId(result.getString("msgid"));
+            } else {
+				logSign.setSmsStatus(-2);
+			}
+		} catch (Exception e) {
+			LOG.error("----发送短信出现错误, 具体错误：{}", e);
+		}
 		logSignDao.save(logSign);
+	}
+
+	private JSONObject sendSms(String phone, boolean isSign){
+		String url = "";
+		String appkey = "";
+		String appid = "";
+		String templetID = "";
+		String authToken = "";
+		//将pType为18的全部查出来
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("pType", 18);
+		List<DictEntity> list = dictService.queryList(map);
+		for (DictEntity dictEntity : list) {
+			if (19 == dictEntity.getId()) {
+				url = dictEntity.getDescribe();
+			} else if (20 == dictEntity.getId()) {
+				appkey = dictEntity.getDescribe();
+			} else if (21 == dictEntity.getId()) {
+				appid = dictEntity.getDescribe();
+			//当为签到，且id为22，则将模板ID赋值为签到模板ID
+			} else if (isSign && 22 == dictEntity.getId()) {
+				templetID = dictEntity.getDescribe();
+			//当为不签到，且id为23，则将模板ID赋值为撤销签到模板ID
+			} else if (!isSign && 23 == dictEntity.getId()) {
+				templetID = dictEntity.getDescribe();
+			} else if (24 == dictEntity.getId()) {
+				authToken = dictEntity.getDescribe();
+			}
+		}
+		//模板参数 todo 添加参数
+		String[] templateArgs = new String[5];
+		return SendSmsUtils.sendSms(appkey, appid, templetID, templateArgs, phone, authToken, url);
 	}
 
 	//从课程的vipCardType字段获取当前课程的扣费信息 initialMoney:扣除金额,initialNumber扣除次数, status:是否可用

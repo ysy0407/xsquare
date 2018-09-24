@@ -32,7 +32,7 @@ $(function () {
 			}
         ],
 		viewrecords: true,
-        height: 500,
+        height: 600,
         rowNum: 10,
 		rowList : [10,30,50],
         rownumbers: true, 
@@ -71,8 +71,8 @@ $(function () {
             { label: '联系方式', name: 'vipCardEntity.vipUser.phone', index: '', width: 120, align: "center", sortable: false},
             { label: '会员卡号', name: 'vipCardEntity.vipCardNum', index: '', width: 120, align: "center", sortable: false},
             { label: '会员类别', name: 'vipCardEntity.vipCardType.name', index: '', width: 120, align: "center", sortable: false},
-            { label: '签到时间', name: 'signTime', index: 'sign_time', width: 150, align: "center", sortable: true},
-            { label: '短信发送状态', name: 'smsStatus', index: '', width: 100, align: "center", sortable: false,
+            { label: '签到时间', name: 'signTime', index: 'sign_time', width: 160, align: "center", sortable: true},
+            { label: '短信发送状态', name: 'smsStatus', index: '', width: 120, align: "center", sortable: false,
                 //短信发送状态，-2：提交失败，-1：提交成功，0：未发送，1：发送成功，2：发送失败
                 formatter: function (cellValue, options, rowObject) {
                     if (cellValue == -2) {
@@ -89,14 +89,18 @@ $(function () {
                 }
             },
             { label: '操作人员', name: 'signHandlePerson', index: '', width: 80, align: "center", sortable: false},
-            { label: '操作', name: '', index: 'handle', width: 100, align: "center", sortable: false,
+            { label: '操作', name: 'status', index: 'handle', width: 120, align: "center", sortable: false,
                 formatter: function (cellValue, options, rowObject) {
-                    return '<span class="label label-danger pointer" style="display: inline-block;padding: 8px 8px;" onclick="backsign('+rowObject.id+', \''+rowObject.classtableId+'\', \''+rowObject.vipCardId+'\''+')">撤销签到</span>'
+                    if (cellValue == 0) {
+                        return '签到已被撤销'
+                    } else {
+                        return '<span class="label label-danger pointer" style="display: inline-block;padding: 8px 8px;" onclick="backsign('+rowObject.id+', \''+rowObject.classtableId+'\', \''+rowObject.vipCardId+'\''+')">撤销签到</span>'}
                 }
             }
         ],
         viewrecords: true,
-        height: 450,
+        height: 550,
+        width:900,
         rowNum: 10,
         rowList: [10,30,50],
         sortable: true,

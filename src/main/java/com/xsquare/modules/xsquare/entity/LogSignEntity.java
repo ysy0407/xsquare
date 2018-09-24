@@ -28,6 +28,8 @@ public class LogSignEntity implements Serializable {
 	private Integer smsStatus;
 	//短信流水号
 	private String msgId;
+	//手机号
+	private String phone;
 	//签到的执行人员
 	private String signHandlePerson;
 	//签到日志状态，1：正常，0：被撤销
@@ -93,6 +95,14 @@ public class LogSignEntity implements Serializable {
 
 	public void setMsgId(String msgId) {
 		this.msgId = msgId;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
 
 	public Integer getSmsStatus() {

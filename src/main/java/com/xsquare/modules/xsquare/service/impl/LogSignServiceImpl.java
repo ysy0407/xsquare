@@ -14,10 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.xsquare.modules.xsquare.dao.LogSignDao;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,8 +57,9 @@ public class LogSignServiceImpl implements LogSignService {
 		Map<String, Object> map = new HashMap<>();
 		map.put("classtableId", logSign.getClasstableId());
 		map.put("vipCardId", logSign.getVipCardId());
+		map.put("status", 1);
 		List<LogSignEntity> logSignList = logSignDao.queryList(map);
-		//大于0说明已经签到过了
+		//大于0说明已经签到过了,并且是没有被撤销的
 		if (logSignList.size() > 0) {
 			throw new RRException("您的会员卡已经签到过当前课程，<br>签到时间："+logSignList.get(0).getSignTime());
 		}
@@ -113,17 +111,29 @@ public class LogSignServiceImpl implements LogSignService {
 		//修改当前课程的签到人数
 		classtable.setSignNum(classtable.getSignNum() + 1);
 		classtableService.update(classtable);
-
+		String nowTime = DateUtils.getTime();
 		//保存签到日志
-		logSign.setSignTime(DateUtils.getTime());
+		logSign.setSignTime(nowTime);
+		logSign.setPhone(vipCard.getVipUser().getPhone());
 		//操作人姓名
 		String handlePerson = ((SysUserEntity) SecurityUtils.getSubject().getPrincipal()).getName();
 		logSign.setSignHandlePerson(handlePerson);
-		//todo 短信发送，短信内容，尊敬的埃克斯方舞馆会员，您的卡号为{0}的会员卡，于{1}签到{2}课程，您的会员卡{3}。
-		//{0}：卡号，{1}：签到时间，{2}：课程名称，{3}：剩余次数/金额，有效期至。。。
-		//或者直接大变量模板
+		//直接大变量模板发送短信
+		StringBuffer templetArg = new StringBuffer("尊敬的埃克斯方舞馆会员, 您的会员卡：");
+		templetArg.append(vipCard.getVipCardNum()).append("，在").append(nowTime)
+				.append("签到").append(course.getName()).append("课程。")
+				.append("您的会员卡");
+		if ("2".equals(vipCard.getDeductionType())) {
+			templetArg.append("为按金额扣费，剩余金额：").append(vipCard.getBalanceMoney()).append("元。");
+		}
+		if ("3".equals(vipCard.getDeductionType())) {
+			templetArg.append("为按次数扣费，剩余次数：").append(vipCard.getBalanceNumber()).append("次。");
+		}
+		if ("4".equals(vipCard.getDeductionType())) {
+			templetArg.append("为有效期内免费，有效期至：").append(vipCard.getEffectiveDate()).append("。");
+		}
 		try {
-			JSONObject result = sendSms(vipCard.getVipUser().getPhone(), true);
+			JSONObject result = sendSms(vipCard.getVipUser().getPhone(), templetArg.toString(), true);
 			if (result != null && result.getInt("success") == 1) {
                 logSign.setSmsStatus(-1);
                 logSign.setMsgId(result.getString("msgid"));
@@ -136,7 +146,8 @@ public class LogSignServiceImpl implements LogSignService {
 		logSignDao.save(logSign);
 	}
 
-	private JSONObject sendSms(String phone, boolean isSign){
+	private JSONObject sendSms(String phone, String templetArg, boolean isSign){
+		String[] templateArgs = new String[1];
 		String url = "";
 		String appkey = "";
 		String appid = "";
@@ -163,8 +174,7 @@ public class LogSignServiceImpl implements LogSignService {
 				authToken = dictEntity.getDescribe();
 			}
 		}
-		//模板参数 todo 添加参数
-		String[] templateArgs = new String[5];
+		templateArgs[0] = templetArg;
 		return SendSmsUtils.sendSms(appkey, appid, templetID, templateArgs, phone, authToken, url);
 	}
 
@@ -237,9 +247,46 @@ public class LogSignServiceImpl implements LogSignService {
 		//修改当前课程的签到人数
 		classtable.setSignNum(classtable.getSignNum() - 1);
 		classtableService.update(classtable);
-
+		//初始化logSign参数
+		LogSignEntity logSign = logSignDao.queryObject(map.get("logSignId"));
+		//签到的时间
+		String signTime = logSign.getSignTime();
+		String nowTime = DateUtils.getTime();
+		logSign.setSignTime(nowTime);
+		logSign.setPhone(vipCard.getVipUser().getPhone());
+		//操作人姓名
+		String handlePerson = ((SysUserEntity) SecurityUtils.getSubject().getPrincipal()).getName();
+		logSign.setSignHandlePerson(handlePerson);
+		//直接大变量模板发送短信
+		StringBuffer templetArg = new StringBuffer("尊敬的埃克斯方舞馆会员, 您的会员卡：");
+		templetArg.append(vipCard.getVipCardNum()).append("，在").append(signTime)
+				.append("签到的").append(course.getName()).append("课程，在").append(nowTime)
+				.append("被撤销签到。")
+				.append("您的会员卡");
+		if ("2".equals(vipCard.getDeductionType())) {
+			templetArg.append("为按金额扣费，剩余金额：").append(vipCard.getBalanceMoney()).append("元。");
+		}
+		//TODO 将所有地方的按次数扣费的地方，将有效期去掉！！！
+		if ("3".equals(vipCard.getDeductionType())) {
+			templetArg.append("为按次数扣费，剩余次数：").append(vipCard.getBalanceNumber()).append("次。");
+		}
+		if ("4".equals(vipCard.getDeductionType())) {
+			templetArg.append("为有效期内免费，有效期至：").append(vipCard.getEffectiveDate()).append("。");
+		}
+		try {
+			JSONObject result = sendSms(vipCard.getVipUser().getPhone(), templetArg.toString(), false);
+			if (result != null && result.getInt("success") == 1) {
+				logSign.setSmsStatus(-1);
+				logSign.setMsgId(result.getString("msgid"));
+			} else {
+				logSign.setSmsStatus(-2);
+			}
+		} catch (Exception e) {
+			LOG.error("----发送短信出现错误, 具体错误：{}", e);
+		}
+		logSign.setStatus(0);
 		//修改签到状态
-		logSignDao.delete(map.get("logSignId"));
+		logSignDao.update(logSign);
 	}
 	
 	@Override

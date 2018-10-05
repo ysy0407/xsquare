@@ -10,6 +10,7 @@
         <result property="vipCardId" column="vip_card_id"/>
         <result property="signTime" column="sign_time"/>
         <result property="smsStatus" column="sms_status"/>
+        <result property="phone" column="phone"/>
         <result property="msgId" column="msg_id"/>
         <result property="signHandlePerson" column="sign_handle_person"/>
         <result property="status" column="status"/>
@@ -26,12 +27,20 @@
 	<select id="queryList" resultMap="logSign">
 		select * from log_sign
 		<where>
-			`status` = 1
 			<if test="classtableId != null and classtableId != ''">
 				and `classtable_id` = #{classtableId}
 			</if>
 			<if test="vipCardId != null and vipCardId != ''">
 				and `vip_card_id` = #{vipCardId}
+			</if>
+			<if test="status != null and status != ''">
+				and `status` = #{status}
+			</if>
+			<if test="msgId != null and msgId != ''">
+				and `msg_id` = #{msgId}
+			</if>
+			<if test="phone != null and phone != ''">
+				and `phone` = #{phone}
 			</if>
 		</where>
         <choose>
@@ -50,12 +59,14 @@
  	<select id="queryTotal" resultType="int">
 		select count(*) from log_sign
 		<where>
-			`status` = 1
 			<if test="classtableId != null and classtableId != ''">
 				and `classtable_id` = #{classtableId}
 			</if>
 			<if test="vipCardId != null and vipCardId != ''">
 				and `vip_card_id` = #{vipCardId}
+			</if>
+			<if test="status != null and status != ''">
+				and `status` = #{status}
 			</if>
 		</where>
 	</select>
@@ -67,6 +78,7 @@
 			`vip_card_id`,
 			`sign_time`,
 			`sms_status`,
+			`phone`,
 			`msg_id`,
 			`sign_handle_person`
 		)
@@ -76,6 +88,7 @@
 			#{vipCardId},
 			#{signTime},
 			#{smsStatus},
+			#{phone},
 			#{msgId},
 			#{signHandlePerson}
 		)
@@ -84,7 +97,7 @@
 	<update id="update" parameterType="com.xsquare.modules.xsquare.entity.LogSignEntity">
 		update log_sign 
 		<set>
-			<if test="classtable_id != null">`classtable_id` = #{classtableId}, </if>
+			<if test="classtableId != null">`classtable_id` = #{classtableId}, </if>
 			<if test="vipCardId != null">`vip_card_id` = #{vipCardId}, </if>
 			<if test="signTime != null">`sign_time` = #{signTime}, </if>
 			<if test="smsStatus != null">`sms_status` = #{smsStatus}, </if>

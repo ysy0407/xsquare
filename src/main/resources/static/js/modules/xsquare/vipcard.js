@@ -794,7 +794,9 @@ var vm = new Vue({
 			var page = $("#jqGrid").jqGrid('getGridParam','page');
 			$("#jqGrid").jqGrid('setGridParam',{
                 postData: {
-                    query: JSON.stringify(vm.query)
+                    'userNameOrCardId': vm.query.userNameOrCardId,
+                    'vipCardType': vm.query.vipCardType,
+                    'vipCardStatus': vm.query.vipCardStatus
                 },
                 page:page,
 

@@ -30,6 +30,9 @@
 		select * from vip_card card, vip_user user
 		<where>
 			card.vip_user_id = user.id
+			<if test="vipCardStatus = null">
+				and card.`status` = 1
+			</if>
 			<if test="vipCardStatus != null and vipCardStatus != ''">
 				and card.`status` = #{vipCardStatus}
 			</if>

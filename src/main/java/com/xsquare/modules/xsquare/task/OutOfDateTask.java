@@ -36,8 +36,7 @@ public class OutOfDateTask {
     @Autowired
     private TeacherService teacherService;
 
-//    @Scheduled(cron="*/50 * * * * ?")
-//    @Scheduled(cron="0 0 1 * * ?") //每天,1点0分执行 测试
+//    @Scheduled(cron="*/50 * * * * ?") //每50秒执行一次 测试
     @Scheduled(cron="0 0 1 * * ?") //每天,1点0分执行 生产
     public void outOfDateTaskContent() {
         logger.info("---------outOfDateTaskContent");

@@ -41,18 +41,18 @@ public class VipCardController {
 	@RequestMapping("/list")
 	@RequiresPermissions("xsquare:vipcard:list")
 	public R list(@RequestParam Map<String, Object> params){
-		System.out.println(params);
-		if (params.containsKey("query")) {
-			JSONObject paramJson = JSONObject.fromObject(params.get("query").toString());
-			params.put("vipCardStatus", paramJson.get("vipCardStatus"));
-			params.put("vipCardType", paramJson.get("vipCardType"));
-			params.put("userNameOrCardId", paramJson.get("userNameOrCardId"));
-		} else {
-			params.put("vipCardStatus", 1);
+		System.out.println("params:"+params);
+		if (!params.containsKey("vipCardStatus")) {
+			params.put("vipCardStatus", "1");
 		}
+
+		/*params.put("vipCardStatus", params.get("vipCardStatus").toString());
+		params.put("vipCardType", params.get("vipCardType").toString());
+		params.put("userNameOrCardId", params.get("userNameOrCardId").toString());*/
 
 		//查询列表数据
         Query query = new Query(params);
+		System.out.println("query:"+query);
 
 		List<VipCardEntity> vipCardList = vipCardService.queryList(query);
 		int total = vipCardService.queryTotal(query);
@@ -90,6 +90,8 @@ public class VipCardController {
 		VipUserEntity vipUser = (VipUserEntity)JSONObject.toBean(vipUserJson, VipUserEntity.class);
 		//将vipCard的json对象转为实体类对象
 		VipCardEntity vipCard = (VipCardEntity)JSONObject.toBean(vipCardJson, VipCardEntity.class);
+
+		vipCard.setVipUser(vipUser);
 
 		Map<String, Object> param = new HashMap<String, Object>();
 		param.put("vipCardNum", vipCard.getVipCardNum());
@@ -219,11 +221,12 @@ public class VipCardController {
 		if (handleType == 14) {
 			newVipCardJson.remove("show");
 			VipCardEntity handleNewVipCard = (VipCardEntity)JSONObject.toBean(newVipCardJson, VipCardEntity.class);
+			VipUserEntity vipUser = (VipUserEntity)JSONObject.toBean(vipUserJson, VipUserEntity.class);
 			handleNewVipCard.setVipCardNum(vipCardJson.get("vipCardNum").toString());
-			handleNewVipCard.setVipUserId(vipUserJson.get("id").toString());
+			handleNewVipCard.setVipUserId(vipUser.getId());
 			handleNewVipCard.setOpenDate(DateUtils.getDate());
 			System.out.println(handleNewVipCard);
-
+			handleNewVipCard.setVipUser(vipUser);
 			vipCardService.save(handleNewVipCard);
 		}
 		return R.ok();

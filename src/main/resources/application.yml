@@ -4,14 +4,14 @@ server:
         uri-encoding: UTF-8
         max-threads: 1000
         min-spare-threads: 30
-    port: 1011
+    port: 7099
     connection-timeout: 5000
     context-path: /xsquare
 
 spring:
     # 环境 dev|test|pro
     profiles:
-        active: dev
+        active: pro
     # jackson时间格式化
     jackson:
         time-zone: GMT+8

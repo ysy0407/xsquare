@@ -8,6 +8,7 @@ import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,8 +36,9 @@ public class SmsReportController {
     @Autowired
     private LogSignService logSignService;
 
-    @RequestMapping("/report")
+    @PostMapping("/report")
     public JSONObject report(@RequestBody JSONObject jsonObject){
+        System.out.println(jsonObject.toString());
         LOG.info("----接收东信短信回调，回调内容为：{}", jsonObject);
         JSONObject reportHeader = null;
         JSONObject reportBody = null;
@@ -89,9 +91,9 @@ public class SmsReportController {
                     LogSignEntity logSign = signEntityList.get(0);
                     //0：发送成功，1：发送失败
                     if ("0".equals(status)) {
-                        logSign.setStatus(1);
+                        logSign.setSmsStatus(1);
                     } else {
-                        logSign.setStatus(2);
+                        logSign.setSmsStatus(2);
                     }
                     logSignService.update(logSign);
                     LOG.info("----更新签到表成功，更新内容为：{}", logSign);

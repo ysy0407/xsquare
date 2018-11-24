@@ -54,7 +54,7 @@ $(function () {
 			},
             { label: '会员卡操作', width: 90, align: "center", sortable: false,
                 formatter: function(cellValue,options,rowObject) {
-					var info = '\''+rowObject.vipCardNum+'\',\''+rowObject.vipUser.name+'\',\''+rowObject.vipUserId+
+					var info = '\''+rowObject.vipCardNum+'\',\''+rowObject.vipUser.name+'\',\''+rowObject.vipUserId+'\',\''+rowObject.vipUser.phone+
 						'\',\''+rowObject.dictDeductionType.describe+'\',\''+rowObject.balanceMoney+
 						'\',\''+rowObject.balanceNumber+'\',\''+rowObject.integral+
 						'\',\''+rowObject.effectiveDate+'\',\''+rowObject.id+'\',\''+rowObject.deductionType+
@@ -291,7 +291,7 @@ function showMoreBtn(obj) {
 }
 
 //操作
-function handle(vipCardNum, name, vipUserId, dictDeductionDesc, balanceMoney, balanceNumber, integral, effectiveDate, id, deductionType, takeEffectDate, openDate, handleType) {
+function handle(vipCardNum, name, vipUserId, phone, dictDeductionDesc, balanceMoney, balanceNumber, integral, effectiveDate, id, deductionType, takeEffectDate, openDate, handleType) {
 	//初始化操作信息
     vm.initHandleInfo()
     //更改初始金额，初始次数的显示方式
@@ -301,6 +301,7 @@ function handle(vipCardNum, name, vipUserId, dictDeductionDesc, balanceMoney, ba
 	vm.vipCard.vipCardNum = vipCardNum
 	vm.vipUser.name = name
 	vm.vipUser.id = vipUserId
+    vm.vipUser.phone = phone
 	vm.dictDeductionDesc = dictDeductionDesc
 	vm.vipCard.deductionType = deductionType
 	vm.vipCard.balanceMoney = balanceMoney

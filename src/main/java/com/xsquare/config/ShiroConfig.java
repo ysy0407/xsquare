@@ -70,6 +70,8 @@ public class ShiroConfig {
         filterMap.put("/captcha.jpg", "anon");
         //获取图片不进行过滤
         filterMap.put("/getImg", "anon");
+        //东信短信状态回调不进行过滤
+        filterMap.put("/caihsms/**", "anon");
         filterMap.put("/", "anon");
         filterMap.put("/**", "oauth2");
         shiroFilter.setFilterChainDefinitionMap(filterMap);

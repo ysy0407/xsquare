@@ -1,5 +1,6 @@
 package com.xsquare.modules.xsquare.service.impl;
 
+import com.xsquare.common.utils.SendSmsUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,8 @@ import com.xsquare.modules.xsquare.service.VipCardService;
 public class VipCardServiceImpl implements VipCardService {
 	@Autowired
 	private VipCardDao vipCardDao;
+	@Autowired
+	private SendSmsUtils sendSmsUtils;
 	
 	@Override
 	public VipCardEntity queryObject(String id){
@@ -35,6 +38,11 @@ public class VipCardServiceImpl implements VipCardService {
 	@Override
 	public void save(VipCardEntity vipCard){
 		vipCardDao.save(vipCard);
+		StringBuffer createVipCardSmsInfo = new StringBuffer("尊敬的");
+		createVipCardSmsInfo.append(vipCard.getVipUser().getName()).append(",欢迎您成为埃克斯方流行舞进修学苑会员，")
+				.append("您的开卡费用为：").append(vipCard.getPrice()).append("元，");
+		createVipCardSmsInfo.append(sendSmsUtils.getInfoByDeductionTyp(vipCard));
+		sendSmsUtils.sendSms(vipCard.getVipUser().getPhone(), createVipCardSmsInfo.toString());
 	}
 	
 	@Override

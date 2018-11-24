@@ -5,12 +5,12 @@ spring:
         druid:
             first:
                 url: jdbc:mysql://localhost:3306/xsquare?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8
-                username: xsquare
-                password: xsquare
+                username: root
+                password: root
             second:
                 url: jdbc:mysql://localhost:3306/xsquare?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8
-                username: xsquare
-                password: xsquare
+                username: root
+                password: root
             initial-size: 10
             max-active: 100
             min-idle: 10

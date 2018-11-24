@@ -34,6 +34,8 @@ public class LogSignServiceImpl implements LogSignService {
 	private VipCardService vipCardService;
 	@Autowired
 	private DictService dictService;
+	@Autowired
+	private SendSmsUtils sendSmsUtils;
 	
 	@Override
 	public LogSignEntity queryObject(Integer id){
@@ -119,21 +121,11 @@ public class LogSignServiceImpl implements LogSignService {
 		String handlePerson = ((SysUserEntity) SecurityUtils.getSubject().getPrincipal()).getName();
 		logSign.setSignHandlePerson(handlePerson);
 		//直接大变量模板发送短信
-		StringBuffer templetArg = new StringBuffer("尊敬的埃克斯方舞馆会员, 您的会员卡：");
-		templetArg.append(vipCard.getVipCardNum()).append("，在").append(nowTime)
-				.append("签到").append(course.getName()).append("课程。")
-				.append("您的会员卡");
-		if ("2".equals(vipCard.getDeductionType())) {
-			templetArg.append("为按金额扣费，剩余金额：").append(vipCard.getBalanceMoney()).append("元。");
-		}
-		if ("3".equals(vipCard.getDeductionType())) {
-			templetArg.append("为按次数扣费，剩余次数：").append(vipCard.getBalanceNumber()).append("次。");
-		}
-		if ("4".equals(vipCard.getDeductionType())) {
-			templetArg.append("为有效期内免费，有效期至：").append(vipCard.getEffectiveDate()).append("。");
-		}
+		StringBuffer templetArg = new StringBuffer("尊敬的埃克斯方流行舞会员, 您在");
+		templetArg.append(nowTime).append("签到").append(course.getName()).append("课程。");
+		templetArg.append(sendSmsUtils.getInfoByDeductionTyp(vipCard));
 		try {
-			JSONObject result = sendSms(vipCard.getVipUser().getPhone(), templetArg.toString(), true);
+			JSONObject result = sendSmsUtils.sendSms(vipCard.getVipUser().getPhone(), templetArg.toString());
 			if (result != null && result.getInt("success") == 1) {
                 logSign.setSmsStatus(-1);
                 logSign.setMsgId(result.getString("msgid"));
@@ -144,38 +136,6 @@ public class LogSignServiceImpl implements LogSignService {
 			LOG.error("----发送短信出现错误, 具体错误：{}", e);
 		}
 		logSignDao.save(logSign);
-	}
-
-	private JSONObject sendSms(String phone, String templetArg, boolean isSign){
-		String[] templateArgs = new String[1];
-		String url = "";
-		String appkey = "";
-		String appid = "";
-		String templetID = "";
-		String authToken = "";
-		//将pType为18的全部查出来
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("pType", 18);
-		List<DictEntity> list = dictService.queryList(map);
-		for (DictEntity dictEntity : list) {
-			if (19 == dictEntity.getId()) {
-				url = dictEntity.getDescribe();
-			} else if (20 == dictEntity.getId()) {
-				appkey = dictEntity.getDescribe();
-			} else if (21 == dictEntity.getId()) {
-				appid = dictEntity.getDescribe();
-			//当为签到，且id为22，则将模板ID赋值为签到模板ID
-			} else if (isSign && 22 == dictEntity.getId()) {
-				templetID = dictEntity.getDescribe();
-			//当为不签到，且id为23，则将模板ID赋值为撤销签到模板ID
-			} else if (!isSign && 23 == dictEntity.getId()) {
-				templetID = dictEntity.getDescribe();
-			} else if (24 == dictEntity.getId()) {
-				authToken = dictEntity.getDescribe();
-			}
-		}
-		templateArgs[0] = templetArg;
-		return SendSmsUtils.sendSms(appkey, appid, templetID, templateArgs, phone, authToken, url);
 	}
 
 	//从课程的vipCardType字段获取当前课程的扣费信息 initialMoney:扣除金额,initialNumber扣除次数, status:是否可用
@@ -258,23 +218,12 @@ public class LogSignServiceImpl implements LogSignService {
 		String handlePerson = ((SysUserEntity) SecurityUtils.getSubject().getPrincipal()).getName();
 		logSign.setSignHandlePerson(handlePerson);
 		//直接大变量模板发送短信
-		StringBuffer templetArg = new StringBuffer("尊敬的埃克斯方舞馆会员, 您的会员卡：");
-		templetArg.append(vipCard.getVipCardNum()).append("，在").append(signTime)
-				.append("签到的").append(course.getName()).append("课程，在").append(nowTime)
-				.append("被撤销签到。")
-				.append("您的会员卡");
-		if ("2".equals(vipCard.getDeductionType())) {
-			templetArg.append("为按金额扣费，剩余金额：").append(vipCard.getBalanceMoney()).append("元。");
-		}
-		//TODO 将所有地方的按次数扣费的地方，将有效期去掉！！！
-		if ("3".equals(vipCard.getDeductionType())) {
-			templetArg.append("为按次数扣费，剩余次数：").append(vipCard.getBalanceNumber()).append("次。");
-		}
-		if ("4".equals(vipCard.getDeductionType())) {
-			templetArg.append("为有效期内免费，有效期至：").append(vipCard.getEffectiveDate()).append("。");
-		}
+		StringBuffer templetArg = new StringBuffer("尊敬的埃克斯方会流行舞会员, 您在");
+		templetArg.append(signTime).append("签到的").append(course.getName()).append("课程，在").append(nowTime)
+				.append("被撤销签到。");
+		templetArg.append(sendSmsUtils.getInfoByDeductionTyp(vipCard));
 		try {
-			JSONObject result = sendSms(vipCard.getVipUser().getPhone(), templetArg.toString(), false);
+			JSONObject result = sendSmsUtils.sendSms(vipCard.getVipUser().getPhone(), templetArg.toString());
 			if (result != null && result.getInt("success") == 1) {
 				logSign.setSmsStatus(-1);
 				logSign.setMsgId(result.getString("msgid"));

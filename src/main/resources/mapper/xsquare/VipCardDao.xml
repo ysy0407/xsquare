@@ -30,17 +30,14 @@
 		select * from vip_card card, vip_user user
 		<where>
 			card.vip_user_id = user.id
-			<if test="vipCardStatus = null">
-				and card.`status` = 1
-			</if>
 			<if test="vipCardStatus != null and vipCardStatus != ''">
 				and card.`status` = #{vipCardStatus}
 			</if>
 			<if test="vipCardType != null and vipCardType != ''">
 				AND card.`vip_card_type_id` = #{vipCardType}
 			</if>
-			<if test="userNameOrCardId != null ">
-				AND (card.`vip_card_num` = #{userNameOrCardId} OR user.`name` LIKE '%${userNameOrCardId}%' OR user.`phone` LIKE '%${userNameOrCardId}%')
+			<if test="userNameOrCardId != null and userNameOrCardId != '' ">
+				AND (card.`vip_card_num` LIKE '%${userNameOrCardId}%' OR user.`name` LIKE '%${userNameOrCardId}%' OR user.`phone` LIKE '%${userNameOrCardId}%')
 			</if>
 			<if test="vipCardNum != null">
 				AND card.`vip_card_num` = #{vipCardNum}
@@ -69,8 +66,8 @@
 			<if test="vipCardType != null and vipCardType != ''">
 				AND card.`vip_card_type_id` = #{vipCardType}
 			</if>
-			<if test="userNameOrCardId != null ">
-				AND (card.`vip_card_num` = #{userNameOrCardId} OR user.`name` LIKE '%${userNameOrCardId}%' OR user.`phone` LIKE '%${userNameOrCardId}%')
+			<if test="userNameOrCardId != null  and userNameOrCardId != ''">
+				AND (card.`vip_card_num` LIKE '%${userNameOrCardId}%' OR user.`name` LIKE '%${userNameOrCardId}%' OR user.`phone` LIKE '%${userNameOrCardId}%')
 			</if>
 		</where>
 	</select>

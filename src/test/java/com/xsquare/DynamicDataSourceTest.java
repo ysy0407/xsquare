@@ -17,19 +17,28 @@ public class DynamicDataSourceTest {
     @Autowired
     private DataSourceTestService dataSourceTestService;
 
+
+
     @Test
     public void test(){
+        Byte b1 = new Byte((byte)1);
+        if (b1 == (byte)1) {
+            System.out.println(1);
+        }
+        if (b1 != (byte)1) {
+            System.out.println(2);
+        }
         //数据源1
-        UserEntity user = dataSourceTestService.queryObject(1L);
-        System.out.println(ToStringBuilder.reflectionToString(user));
-
-        //数据源2
-        UserEntity user2 = dataSourceTestService.queryObject2(1L);
-        System.out.println(ToStringBuilder.reflectionToString(user2));
-
-        //数据源1
-        UserEntity user3 = dataSourceTestService.queryObject(1L);
-        System.out.println(ToStringBuilder.reflectionToString(user3));
+//        UserEntity user = dataSourceTestService.queryObject(1L);
+//        System.out.println(ToStringBuilder.reflectionToString(user));
+//
+//        //数据源2
+//        UserEntity user2 = dataSourceTestService.queryObject2(1L);
+//        System.out.println(ToStringBuilder.reflectionToString(user2));
+//
+//        //数据源1
+//        UserEntity user3 = dataSourceTestService.queryObject(1L);
+//        System.out.println(ToStringBuilder.reflectionToString(user3));
     }
 
 }

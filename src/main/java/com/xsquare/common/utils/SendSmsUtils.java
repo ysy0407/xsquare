@@ -1,13 +1,19 @@
 package com.xsquare.common.utils;
 
 import com.xsquare.common.httpClient.HttpClientUtil;
+import com.xsquare.modules.xsquare.entity.DictEntity;
+import com.xsquare.modules.xsquare.entity.VipCardEntity;
+import com.xsquare.modules.xsquare.service.DictService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,10 +25,58 @@ import java.util.Map;
  * @Project_name xsquare
  * @Since JDK 1.8
  **/
-
+@Component
 public class SendSmsUtils {
 
     private static Logger LOG = LoggerFactory.getLogger(SendSmsUtils.class);
+
+    @Autowired
+    private DictService dictService;
+
+    //根据会员卡类型获取不同的描述
+    public String getInfoByDeductionTyp(VipCardEntity vipCard){
+        StringBuffer info = new StringBuffer("您的会员卡");
+        info.append(vipCard.getVipCardNum());
+        if ("2".equals(vipCard.getDeductionType())) {
+            info.append("为按金额扣费，剩余金额：").append(vipCard.getBalanceMoney()).append("元。");
+        }
+        if ("3".equals(vipCard.getDeductionType())) {
+            info.append("为按次数扣费，剩余次数：").append(vipCard.getBalanceNumber()).append("次。");
+        }
+        if ("4".equals(vipCard.getDeductionType())) {
+            info.append("为有效期内免费，有效期至：").append(vipCard.getEffectiveDate()).append("。");
+        }
+        return info.toString();
+    }
+
+    public JSONObject sendSms(String phone, String templetArg){
+        String[] templateArgs = new String[1];
+        String url = "";
+        String appkey = "";
+        String appid = "";
+        String templetID = "";
+        String authToken = "";
+        //将pType为18的全部查出来
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("pType", 18);
+        List<DictEntity> list = dictService.queryList(map);
+        for (DictEntity dictEntity : list) {
+            if (19 == dictEntity.getId()) {
+                url = dictEntity.getDescribe();
+            } else if (20 == dictEntity.getId()) {
+                appkey = dictEntity.getDescribe();
+            } else if (21 == dictEntity.getId()) {
+                appid = dictEntity.getDescribe();
+                //id为22时，描述为模板ID
+            } else if (22 == dictEntity.getId()) {
+                templetID = dictEntity.getDescribe();
+            } else if (24 == dictEntity.getId()) {
+                authToken = dictEntity.getDescribe();
+            }
+        }
+        templateArgs[0] = templetArg;
+        return sendSms(appkey, appid, templetID, templateArgs, phone, authToken, url);
+    }
 
     /**
      * @功能描述
@@ -43,7 +97,7 @@ public class SendSmsUtils {
      * @return org.json.JSONObject
      * @since JDK 1.8
      */
-    public static JSONObject sendSms(String appkey, String appId, String templateId, String[] templateArgs, String phone, String authToken, String url) {
+    public JSONObject sendSms(String appkey, String appId, String templateId, String[] templateArgs, String phone, String authToken, String url) {
         JSONObject result = null;
         try {
             JSONObject jsonRequest = new JSONObject();

@@ -35,6 +35,32 @@ public class LogSignEntity implements Serializable {
 	//签到日志状态，1：正常，0：被撤销
 	private Integer status;
 
+	public static void main(String[] args) {
+		Byte b1 = new Byte((byte)1);
+		if (b1 == (byte)1) {
+			System.out.println(1);
+		}
+		if (b1 != (byte)1) {
+			System.out.println(2);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "LogSignEntity{" +
+				"id=" + id +
+				", vipCardId='" + vipCardId + '\'' +
+				", vipCardEntity=" + vipCardEntity +
+				", classtableId='" + classtableId + '\'' +
+				", signTime='" + signTime + '\'' +
+				", smsStatus=" + smsStatus +
+				", msgId='" + msgId + '\'' +
+				", phone='" + phone + '\'' +
+				", signHandlePerson='" + signHandlePerson + '\'' +
+				", status=" + status +
+				'}';
+	}
+
 	/**
 	 * 设置：
 	 */

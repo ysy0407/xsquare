@@ -80,16 +80,16 @@ $(function () {
                     } else if (cellValue == -1) {
                         return '提交成功'
                     } else if (cellValue == 1) {
-                        return '发送失败'
-                    } else if (cellValue == 2) {
                         return '发送成功'
+                    } else if (cellValue == 2) {
+                        return '发送失败'
                     } else {
                         return '未发送'
                     }
                 }
             },
             { label: '操作人员', name: 'signHandlePerson', index: '', width: 80, align: "center", sortable: false},
-            { label: '操作', name: 'status', index: 'handle', width: 120, align: "center", sortable: false,
+            { label: '操作', name: 'status', index: 'handle', width: 90, align: "center", sortable: false,
                 formatter: function (cellValue, options, rowObject) {
                     if (cellValue == 0) {
                         return '签到已被撤销'
@@ -99,7 +99,7 @@ $(function () {
             }
         ],
         viewrecords: true,
-        height: 550,
+        height: 400,
         width:900,
         rowNum: 10,
         rowList: [10,30,50],

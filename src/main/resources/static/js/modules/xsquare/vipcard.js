@@ -77,7 +77,7 @@ $(function () {
                 }}
         ],
 		viewrecords: true,
-        height: 385,
+        height: 430,
         rowNum: 10,
 		rowList : [10,30,50],
         rownumbers: true, 
@@ -731,6 +731,7 @@ var vm = new Vue({
                     return
                 }
                 vm.handle.type = 15
+                vm.vipUser.id = vm.vipCard.vipUserId
                 url = "xsquare/vipuser/update"
 			}
             var cardAndUser = {
@@ -779,7 +780,9 @@ var vm = new Vue({
 		},
 		getInfo: function(id){
 			$.get(baseURL + "xsquare/vipcard/info/"+id, function(r){
-                vm.vipCard = r.vipCard;
+                vm.vipCard = r.vipCard
+                //不知道为什么生产环境这个vm.vipUser.id一直为未定义
+                vm.vipCard.vipUser.id = vm.vipCard.vipUserId
                 vm.vipUser = r.vipCard.vipUser
                 vm.dictDeductionDesc = r.vipCard.dictDeductionType.describe
                 changeDeductionTypeValue(vm.vipCard.deductionType, vm.show)
@@ -805,6 +808,7 @@ var vm = new Vue({
 		},
 		//操作
         handleMethod: function () {
+            vm.vipUser.id = vm.vipCard.vipUserId
             var url = '/xsquare/vipcard/handle'
             var rechargeInfo = {
                 handle: vm.handle,
